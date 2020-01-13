@@ -1,4 +1,5 @@
 import pprint
+from datetime import datetime
 
 '''Sample grids'''
 
@@ -32,6 +33,15 @@ game3 = [[1, 0, 0, 0, 0, 7, 0, 9, 0],
          [0, 4, 0, 0, 0, 0, 0, 0, 7],
          [0, 0, 7, 0, 0, 0, 3, 0, 0]]
 
+multiple_solutions_game = [[7, 9, 0, 0, 0, 0, 0, 0, 0],
+                           [4, 0, 0, 0, 0, 0, 0, 6, 0],
+                           [8, 0, 1, 0, 0, 4, 0, 0, 2],
+                           [0, 0, 5, 0, 0, 0, 0, 0, 0],
+                           [3, 0, 0, 1, 0, 0, 0, 0, 0],
+                           [0, 4, 0, 0, 0, 6, 2, 0, 9],
+                           [2, 0, 0, 0, 3, 0, 5, 0, 6],
+                           [0, 3, 0, 6, 0, 5, 4, 2, 1],
+                           [0, 0, 0, 0, 0, 0, 3, 0, 0]]
 
 def print_grid(grid):
     """Prints out a Sudoku Grid to the console
@@ -97,7 +107,7 @@ def solver(grid):
     """
     try:
         row, col = next_empty_cell(grid)
-    except:
+    except StopIteration:
         # no more empty cells - grid is solved, return a copy
         return [row[:] for row in grid]
     for candidate in range(1, 10):
@@ -108,19 +118,43 @@ def solver(grid):
             if solution:
                 return solution
 
+
 def solution_count(grid):
     try:
         row, col = next_empty_cell(grid)
-    except:
+    except StopIteration:
         # no more empty cells - grid is solved, return a copy
         return 1
     solutions = 0
     for candidate in range(1, 10):
         if candidate_is_possible(grid, row, col, candidate):
             grid[row][col] = candidate
-            solutions += solver(grid)
-            grid[row][col] = 0
+            solutions += solution_count(grid)
+    grid[row][col] = 0
     return solutions
 
-print_grid(game2)
-print_grid(solver(game2))
+class MultipleSolutionsGrid(Exception):
+    pass
+
+def has_multiple_solutions(grid):
+    def check_for_multiple_solutions(grid):
+        try:
+            row, col = next_empty_cell(grid)
+        except StopIteration:
+            # no more empty cells - grid is solved, return a copy
+            return 1
+        solutions = 0
+        for candidate in range(1, 10):
+            if candidate_is_possible(grid, row, col, candidate):
+                grid[row][col] = candidate
+                solutions += check_for_multiple_solutions(grid)
+                if solutions > 1:
+                    raise MultipleSolutionsGrid
+        grid[row][col] = 0
+        return solutions
+    try:
+        check_for_multiple_solutions([row[:] for row in grid])
+        return False
+    except MultipleSolutionsGrid:
+        return True
+
