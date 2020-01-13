@@ -1,5 +1,6 @@
 import pprint
 from datetime import datetime
+from random import shuffle
 
 '''Sample grids'''
 
@@ -42,6 +43,7 @@ multiple_solutions_game = [[7, 9, 0, 0, 0, 0, 0, 0, 0],
                            [2, 0, 0, 0, 3, 0, 5, 0, 6],
                            [0, 3, 0, 6, 0, 5, 4, 2, 1],
                            [0, 0, 0, 0, 0, 0, 3, 0, 0]]
+
 
 def print_grid(grid):
     """Prints out a Sudoku Grid to the console
@@ -120,6 +122,11 @@ def solver(grid):
 
 
 def solution_count(grid):
+    """Number of possible solutions for the puzzle
+
+    :param grid: the sudoku puzzle grid to be solved - a 9 x 9 list of lists of ints
+    :return: (int) the number of possible solutions
+    """
     try:
         row, col = next_empty_cell(grid)
     except StopIteration:
@@ -133,10 +140,18 @@ def solution_count(grid):
     grid[row][col] = 0
     return solutions
 
+
 class MultipleSolutionsGrid(Exception):
     pass
 
+
 def has_multiple_solutions(grid):
+    """Whether a sudoku puzzle has ore than one solution
+
+    :param grid: the sudoku puzzle grid to be solved - a 9 x 9 list of lists of ints
+    :return: (bool) True if the puzzle has multiple solutions
+    """
+
     def check_for_multiple_solutions(grid):
         try:
             row, col = next_empty_cell(grid)
@@ -152,9 +167,93 @@ def has_multiple_solutions(grid):
                     raise MultipleSolutionsGrid
         grid[row][col] = 0
         return solutions
+
     try:
         check_for_multiple_solutions([row[:] for row in grid])
         return False
     except MultipleSolutionsGrid:
         return True
 
+
+def empty_grid():
+    """An empty (all zeros) 9 x 9 grid
+
+    :return: a 9 x 9 list of lists of int, all with value 0
+    """
+    return [[0 for _ in range(9)] for __ in range(9)]
+
+
+def randomised_solver(grid):
+    """Returns a solution to the sudoku puzzle with candidate values for each cell attemped in a random order
+
+    Useful for filling in empty grids to create random magic squares
+
+    :param grid: the sudoku puzzle grid to be solved - a 9 x 9 list of lists of ints
+    :return: the solved sudoku puzzle grid - a 9 x 9 list of lists of ints
+    """
+    try:
+        row, col = next_empty_cell(grid)
+    except StopIteration:
+        # no more empty cells - grid is solved, return a copy
+        return [row[:] for row in grid]
+    candidates = list(range(1, 10))
+    shuffle(candidates)
+    for candidate in candidates:
+        if candidate_is_possible(grid, row, col, candidate):
+            grid[row][col] = candidate
+            solution = randomised_solver(grid)
+            grid[row][col] = 0
+            if solution:
+                return solution
+
+
+def new_puzzle():
+    """Generate a new sudoku puzzle
+
+    :return: the sudoku puzzle grid to be solved - a 9 x 9 list of lists of ints
+    """
+    grid = randomised_solver(empty_grid())
+    cells = [(row, col) for row in range(9) for col in range(4)] + [(row, 4) for row in range(5)]
+    cells = [((row, col), (8 - row, 8 - col)) for row, col in cells]
+    shuffle(cells)
+    for (r1, c1), (r2, c2) in cells:
+        candidate_grid = [[col for col in row] for row in grid]
+        candidate_grid[r1][c1] = 0
+        candidate_grid[r2][c2] = 0
+        if not has_multiple_solutions(candidate_grid):
+            grid = candidate_grid
+    return grid
+
+
+def print_sudoku(grid):
+    """Print grid in sudoku-like format
+    TODO: improve this - it's hacky
+    :param grid: the sudoku puzzle grid to be printed - a 9 x 9 list of lists of ints
+    """
+    str2 = lambda i: str(i) if i > 0 else ' '
+    for row in grid[0:3]:
+        print(f'{" ".join(map(str2, row[0:3]))}|{" ".join(map(str2, row[3:6]))}|{" ".join(map(str2, row[6:9]))}')
+    print('-' * 19)
+    for row in grid[3:6]:
+        print(f'{" ".join(map(str2, row[0:3]))}|{" ".join(map(str2, row[3:6]))}|{" ".join(map(str2, row[6:9]))}')
+    print('-' * 19)
+    for row in grid[6:9]:
+        print(f'{" ".join(map(str2, row[0:3]))}|{" ".join(map(str2, row[3:6]))}|{" ".join(map(str2, row[6:9]))}')
+
+
+def grid_as_line(grid):
+    """Cell values as contiguous one-line string
+
+    :param grid: the sudoku puzzle grid to be flattened - a 9 x 9 list of lists of ints
+    :return: (str) a single line containing 81 numbers with 0 for blank
+    """
+    return ''.join(''.join(str(cell) for cell in row) for row in grid)
+
+
+def count_clues(grid):
+    """The number of non-blanks in the puzzle
+
+    :param grid: the sudoku puzzle grid to be analysed - a 9 x 9 list of lists of ints
+    :return: (int) the number of clues which are not blank (i.e. not 0)
+    """
+    return sum(sum(1 for cell in row if cell != 0) for row in grid)
