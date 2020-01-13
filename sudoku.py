@@ -141,16 +141,15 @@ def solution_count(grid):
     return solutions
 
 
-class MultipleSolutionsGrid(Exception):
-    pass
-
-
 def has_multiple_solutions(grid):
     """Whether a sudoku puzzle has ore than one solution
 
     :param grid: the sudoku puzzle grid to be solved - a 9 x 9 list of lists of ints
     :return: (bool) True if the puzzle has multiple solutions
     """
+
+    class MultipleSolutionsGrid(Exception):
+        pass
 
     def check_for_multiple_solutions(grid):
         try:
@@ -233,10 +232,10 @@ def print_sudoku(grid):
     str2 = lambda i: str(i) if i > 0 else ' '
     for row in grid[0:3]:
         print(f'{" ".join(map(str2, row[0:3]))}|{" ".join(map(str2, row[3:6]))}|{" ".join(map(str2, row[6:9]))}')
-    print('-' * 19)
+    print('-' * 17)
     for row in grid[3:6]:
         print(f'{" ".join(map(str2, row[0:3]))}|{" ".join(map(str2, row[3:6]))}|{" ".join(map(str2, row[6:9]))}')
-    print('-' * 19)
+    print('-' * 17)
     for row in grid[6:9]:
         print(f'{" ".join(map(str2, row[0:3]))}|{" ".join(map(str2, row[3:6]))}|{" ".join(map(str2, row[6:9]))}')
 
@@ -257,3 +256,5 @@ def count_clues(grid):
     :return: (int) the number of clues which are not blank (i.e. not 0)
     """
     return sum(sum(1 for cell in row if cell != 0) for row in grid)
+
+print_sudoku(new_puzzle())
