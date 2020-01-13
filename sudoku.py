@@ -1,5 +1,7 @@
 import pprint
 
+'''Sample grids'''
+
 game = [[0, 4, 0, 0, 0, 0, 1, 7, 9],
         [0, 0, 2, 0, 0, 8, 0, 5, 4],
         [0, 0, 6, 0, 0, 5, 0, 0, 8],
@@ -31,45 +33,94 @@ game3 = [[1, 0, 0, 0, 0, 7, 0, 9, 0],
          [0, 0, 7, 0, 0, 0, 3, 0, 0]]
 
 
-def print_board(board):
-    pprint.PrettyPrinter().pprint(board)
+def print_grid(grid):
+    """Prints out a Sudoku Grid to the console
+
+    :param grid: the sudoku puzzle grid - a 9 x 9 list of lists of ints
+    """
+    pprint.PrettyPrinter().pprint(grid)
 
 
-def box(board, row, col):
+def box(grid, row, col):
+    """List of values in the same 3x3 grid as the target cell
+
+    :param grid: the sudoku puzzle grid - a 9 x 9 list of lists of ints
+    :param row: (int) the row index of the target cell (0-8)
+    :param col: (int) the column index of the target cell (0-8)
+    :return: (list of ints) the 9 values in the same 3x3 box as the target cell
+    """
     box_r = 3 * (row // 3)
     box_c = 3 * (col // 3)
-    return [board[i][j] for i in range(box_r, box_r + 3) for j in range(box_c, box_c + 3)]
+    return [grid[i][j] for i in range(box_r, box_r + 3) for j in range(box_c, box_c + 3)]
 
 
-def column(board, col):
-    return [row[col] for row in board]
+def column(grid, col):
+    """List of values in the target column
+
+    :param grid: the sudoku puzzle grid - a 9 x 9 list of lists of ints
+    :param col: (int) the column index of the target cell (0-8)
+    :return: (list of ints) the 9 values in the same column as the target cell
+    """
+    return [row[col] for row in grid]
 
 
-def candidate_is_possible(board, row, col, candidate):
-    return board[row].count(candidate) == 0 and \
-           column(board, col).count(candidate) == 0 and \
-           box(board, row, col).count(candidate) == 0
+def candidate_is_possible(grid, row, col, candidate):
+    """Whether the candidate does not already occur in the same row, column or 3x3 box as the target cell
+
+    :param grid: the sudoku puzzle grid - a 9 x 9 list of lists of ints
+    :param row: (int) the row index of the target cell (0-8)
+    :param col: (int) the column index of the target cell (0-8)
+    :param candidate: (int) candidate value to be checked (1-9)
+    :return: (bool) True if candidate does not appear in the same row, col or box as the target cell
+    """
+    return grid[row].count(candidate) == 0 and \
+           column(grid, col).count(candidate) == 0 and \
+           box(grid, row, col).count(candidate) == 0
 
 
+def next_empty_cell(grid):
+    """Coordinates of the next cell which isn't already filled in
 
-def next_empty_cell(board):
-    return next((row, col) for row in range(9) for col in range(9) if board[row][col] == 0)
+    :Raises: StopIteration if there are no empty cells left (i.e. the puzzle is solved)
+
+    :param grid: the sudoku puzzle grid - a 9 x 9 list of lists of ints
+    :return: (2-tuple of ints) row, col indices of the next empty grid
+    """
+    return next((row, col) for row in range(9) for col in range(9) if grid[row][col] == 0)
 
 
+def solver(grid):
+    """Returns a solution to the sudoku puzzle
 
-def solver(board):
+    :param grid: the sudoku puzzle grid to be solved - a 9 x 9 list of lists of ints
+    :return: the solved sudoku puzzle grid - a 9 x 9 list of lists of ints
+    """
     try:
-        row, col = next_empty_cell(board)
+        row, col = next_empty_cell(grid)
     except:
-        # no more empty cells - board is solved, return a copy
-        return [row[:] for row in board]
+        # no more empty cells - grid is solved, return a copy
+        return [row[:] for row in grid]
     for candidate in range(1, 10):
-        if candidate_is_possible(board, row, col, candidate):
-            board[row][col] = candidate
-            solution = solver(board)
-            board[row][col] = 0
+        if candidate_is_possible(grid, row, col, candidate):
+            grid[row][col] = candidate
+            solution = solver(grid)
+            grid[row][col] = 0
             if solution:
                 return solution
 
-print_board(game2)
-print_board(solver(game2))
+def solution_count(grid):
+    try:
+        row, col = next_empty_cell(grid)
+    except:
+        # no more empty cells - grid is solved, return a copy
+        return 1
+    solutions = 0
+    for candidate in range(1, 10):
+        if candidate_is_possible(grid, row, col, candidate):
+            grid[row][col] = candidate
+            solutions += solver(grid)
+            grid[row][col] = 0
+    return solutions
+
+print_grid(game2)
+print_grid(solver(game2))
