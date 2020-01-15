@@ -1,6 +1,7 @@
 import pprint
 from datetime import datetime
 from random import shuffle
+import time
 
 '''Sample grids'''
 
@@ -66,6 +67,17 @@ def box(grid, row, col):
     return [grid[i][j] for i in range(box_r, box_r + 3) for j in range(box_c, box_c + 3)]
 
 
+def box_not_row_or_col(grid, row, col):
+    """List of values in the same 3x3 grid as the target cell, but not the same row or column
+
+    :param grid: the sudoku puzzle grid - a 9 x 9 list of lists of ints
+    :param row: (int) the row index of the target cell (0-8)
+    :param col: (int) the column index of the target cell (0-8)
+    :return: (list of ints) the 4 values in the same 3x3 box as the target cell but not the same row or col
+    """
+    return [grid[row // 3 * 3 + (row + i) % 3][col // 3 * 3 + (col + i) % 3] for i in [1, 2] for j in [1, 2]]
+
+
 def column(grid, col):
     """List of values in the target column
 
@@ -85,9 +97,11 @@ def candidate_is_possible(grid, row, col, candidate):
     :param candidate: (int) candidate value to be checked (1-9)
     :return: (bool) True if candidate does not appear in the same row, col or box as the target cell
     """
-    return grid[row].count(candidate) == 0 and \
-           column(grid, col).count(candidate) == 0 and \
-           box(grid, row, col).count(candidate) == 0
+    # return grid[row].count(candidate) == 0 and \
+    #        column(grid, col).count(candidate) == 0 and \
+    #        box(grid, row, col).count(candidate) == 0
+    return (candidate not in grid[row]) and (candidate not in column(grid, col)) and (
+            candidate not in box_not_row_or_col(grid, row, col))
 
 
 def next_empty_cell(grid):
@@ -216,7 +230,7 @@ def new_puzzle():
     cells = [((row, col), (8 - row, 8 - col)) for row, col in cells]
     shuffle(cells)
     for (r1, c1), (r2, c2) in cells:
-        candidate_grid = [[col for col in row] for row in grid]
+        candidate_grid = [row[:] for row in grid]
         candidate_grid[r1][c1] = 0
         candidate_grid[r2][c2] = 0
         if not has_multiple_solutions(candidate_grid):
@@ -257,4 +271,5 @@ def count_clues(grid):
     """
     return sum(sum(1 for cell in row if cell != 0) for row in grid)
 
-print_sudoku(new_puzzle())
+print_sudoku(game3)
+print_sudoku(solver(game3))
