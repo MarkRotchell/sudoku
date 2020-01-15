@@ -46,12 +46,34 @@ multiple_solutions_game = [[7, 9, 0, 0, 0, 0, 0, 0, 0],
                            [0, 0, 0, 0, 0, 0, 3, 0, 0]]
 
 
-def print_grid(grid):
+def print_grid_as_lists(grid):
     """Prints out a Sudoku Grid to the console
 
     :param grid: the sudoku puzzle grid - a 9 x 9 list of lists of ints
     """
     pprint.PrettyPrinter().pprint(grid)
+
+
+def print_sudoku(grid):
+    """Print grid in sudoku-like format
+    TODO: improve this - it's hacky
+    :param grid: the sudoku puzzle grid to be printed - a 9 x 9 list of lists of ints
+    """
+    for i, row in enumerate(grid):
+        row = [' ' if cell == 0 else str(cell) for cell in row]
+        blocks = [row[n:n + 3] for n in [0, 3, 6]]
+        print(' | '.join(' '.join(block) for block in blocks))
+        if i in [2, 5]:
+            print('-' * 21)
+
+
+def print_grid_as_line(grid):
+    """Cell values as contiguous one-line string
+
+    :param grid: the sudoku puzzle grid to be flattened - a 9 x 9 list of lists of ints
+    :return: (str) a single line containing 81 numbers with 0 for blank
+    """
+    return ''.join(''.join(str(cell) for cell in row) for row in grid)
 
 
 def box(grid, row, col):
@@ -238,31 +260,6 @@ def new_puzzle():
     return grid
 
 
-def print_sudoku(grid):
-    """Print grid in sudoku-like format
-    TODO: improve this - it's hacky
-    :param grid: the sudoku puzzle grid to be printed - a 9 x 9 list of lists of ints
-    """
-    str2 = lambda i: str(i) if i > 0 else ' '
-    for row in grid[0:3]:
-        print(f'{" ".join(map(str2, row[0:3]))}|{" ".join(map(str2, row[3:6]))}|{" ".join(map(str2, row[6:9]))}')
-    print('-' * 17)
-    for row in grid[3:6]:
-        print(f'{" ".join(map(str2, row[0:3]))}|{" ".join(map(str2, row[3:6]))}|{" ".join(map(str2, row[6:9]))}')
-    print('-' * 17)
-    for row in grid[6:9]:
-        print(f'{" ".join(map(str2, row[0:3]))}|{" ".join(map(str2, row[3:6]))}|{" ".join(map(str2, row[6:9]))}')
-
-
-def grid_as_line(grid):
-    """Cell values as contiguous one-line string
-
-    :param grid: the sudoku puzzle grid to be flattened - a 9 x 9 list of lists of ints
-    :return: (str) a single line containing 81 numbers with 0 for blank
-    """
-    return ''.join(''.join(str(cell) for cell in row) for row in grid)
-
-
 def count_clues(grid):
     """The number of non-blanks in the puzzle
 
@@ -271,5 +268,7 @@ def count_clues(grid):
     """
     return sum(sum(1 for cell in row if cell != 0) for row in grid)
 
-print_sudoku(game3)
-print_sudoku(solver(game3))
+
+print_sudoku(game)
+print()
+print_sudoku(solver(game))
